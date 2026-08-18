@@ -1,0 +1,112 @@
+# LiteLLM proxy config.
+#
+# Replace the model_list entries below with your actual 12 providers/keys —
+# these are placeholders showing the pattern. Every api_key references an
+# env var (set in .env / docker-compose.yml), never a literal secret here.
+#
+# After this file is stable, stop handing out LITELLM_MASTER_KEY to client
+# apps: mint a virtual key per app/team instead, via:
+#   curl -X POST http://localhost:4000/key/generate \
+#     -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+#     -H "Content-Type: application/json" \
+#     -d '{"models": ["gpt-oss-130b"], "max_budget": 50, "budget_duration": "30d",
+#          "team_id": "support-bot", "metadata": {"team": "support-bot"}}'
+
+model_list:
+  - model_name: gpt-oss-130b
+    litellm_params:
+      model: openai/gpt-oss-130b   # vLLM's OpenAI-compatible server
+      api_base: os.environ/VLLM_API_BASE
+      api_key: os.environ/VLLM_API_KEY
+      timeout: 120
+      stream_timeout: 120
+
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: azure-gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_key: os.environ/AZURE_OPENAI_API_KEY
+      api_base: os.environ/AZURE_OPENAI_API_BASE
+
+  - model_name: command-r-plus
+    litellm_params:
+      model: cohere/command-r-plus
+      api_key: os.environ/COHERE_API_KEY
+
+  - model_name: mistral-large
+    litellm_params:
+      model: mistral/mistral-large-latest
+      api_key: os.environ/MISTRAL_API_KEY
+
+  - model_name: gemini-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: groq-llama
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+
+  - model_name: togetherai-llama
+    litellm_params:
+      model: together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+      api_key: os.environ/TOGETHERAI_API_KEY
+
+  - model_name: deepseek-chat
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: fireworks-llama
+    litellm_params:
+      model: fireworks_ai/llama-v3p3-70b-instruct
+      api_key: os.environ/FIREWORKS_API_KEY
+
+  - model_name: perplexity-sonar
+    litellm_params:
+      model: perplexity/sonar
+      api_key: os.environ/PERPLEXITY_API_KEY
+
+# ----------------------------------------------------------------- Router
+router_settings:
+  # If the remote vLLM host hiccups, fall back rather than hard-failing.
+  fallbacks: [{ "gpt-oss-130b": ["gpt-4o"] }]
+  num_retries: 2
+  retry_after: 2
+  allowed_fails: 3
+  cooldown_time: 30
+
+# ----------------------------------------------------------- General/DB
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL   # virtual keys, spend tracking, teams
+  store_model_in_db: false
+
+# --------------------------------------------------------- Observability
+litellm_settings:
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  # Client requests should pass per-call metadata so traces land grouped:
+  #   extra_body={"metadata": {"trace_user_id": "...", "session_id": "...",
+  #                              "generation_name": "...", "tags": [...]}}
+
+# ------------------------------------------------------------ Guardrails
+# Pre-call prompt-injection screen. Start with default_on: false on trusted
+# internal keys and true on any public-facing/agentic key; tighten once
+# you've checked the false-positive rate against real traffic.
+guardrails:
+  - guardrail_name: "prompt-injection-guard"
+    litellm_params:
+      guardrail: prompt_injection_detection
+      mode: "pre_call"
+      default_on: true

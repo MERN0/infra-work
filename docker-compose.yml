@@ -1,0 +1,213 @@
+# LiteLLM + Langfuse (self-hosted v3) + guardrails, wired together.
+# gpt-oss-130b on vLLM stays on its own remote host — reached via
+# VLLM_API_BASE/VLLM_API_KEY as a model entry in litellm/config.yaml.
+#
+# MIGRATION NOTE: the postgres/clickhouse/minio volumes below are declared
+# `external: true`, pointing at the *_VOLUME_NAME variables in .env. Fill
+# those in with your EXISTING volume names (see scripts/00_backup_existing_stack.sh)
+# before running `docker compose up` for the first time here, so this stack
+# attaches to your current data instead of starting empty. See RUNBOOK.md.
+#
+# Everything is internal-only: only LiteLLM's and Langfuse's UI/API ports are
+# bound, and only to 127.0.0.1 — reach them via an SSH tunnel or VPN, never
+# expose these ports directly to the internet.
+
+name: llm-platform
+
+networks:
+  llm-net:
+    driver: bridge
+
+volumes:
+  litellm_postgres_data:
+    external: true
+    name: ${LITELLM_POSTGRES_VOLUME_NAME}
+  langfuse_postgres_data:
+    external: true
+    name: ${LANGFUSE_POSTGRES_VOLUME_NAME}
+  langfuse_clickhouse_data:
+    external: true
+    name: ${LANGFUSE_CLICKHOUSE_VOLUME_NAME}
+  langfuse_minio_data:
+    external: true
+    name: ${LANGFUSE_MINIO_VOLUME_NAME}
+  # Redis backs Langfuse's queue/cache only — not a source of historical
+  # truth (that's postgres+clickhouse), so it's fine as a fresh local volume.
+  langfuse_redis_data:
+
+services:
+  # ---------------------------------------------------------------- LiteLLM
+  litellm-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LITELLM_DB_USER}
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD}
+      POSTGRES_DB: ${LITELLM_DB_NAME}
+    volumes:
+      - litellm_postgres_data:/var/lib/postgresql/data
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LITELLM_DB_USER} -d ${LITELLM_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.55.8  # pin explicitly; check for newer stable tags before first deploy
+    restart: unless-stopped
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      DATABASE_URL: postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@litellm-db:5432/${LITELLM_DB_NAME}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      LANGFUSE_HOST: ${LANGFUSE_HOST}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_API_BASE: ${AZURE_OPENAI_API_BASE}
+      COHERE_API_KEY: ${COHERE_API_KEY}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      TOGETHERAI_API_KEY: ${TOGETHERAI_API_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      FIREWORKS_API_KEY: ${FIREWORKS_API_KEY}
+      PERPLEXITY_API_KEY: ${PERPLEXITY_API_KEY}
+      VLLM_API_BASE: ${VLLM_API_BASE}
+      VLLM_API_KEY: ${VLLM_API_KEY}
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    ports:
+      - "${LITELLM_HOST_PORT}:4000"
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health/liveliness"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  # --------------------------------------------------------------- Langfuse
+  langfuse-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LANGFUSE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LANGFUSE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${LANGFUSE_POSTGRES_DB}
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LANGFUSE_POSTGRES_USER} -d ${LANGFUSE_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  langfuse-clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: default
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "-O", "/dev/null", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  langfuse-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${LANGFUSE_REDIS_PASSWORD}"]
+    volumes:
+      - langfuse_redis_data:/data
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${LANGFUSE_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  langfuse-minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    restart: unless-stopped
+    command: ["server", "/data"]
+    environment:
+      MINIO_ROOT_USER: ${LANGFUSE_MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${LANGFUSE_MINIO_ROOT_PASSWORD}
+    volumes:
+      - langfuse_minio_data:/data
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  langfuse-web:
+    image: langfuse/langfuse:3  # pin an exact patch tag before first deploy
+    restart: unless-stopped
+    depends_on:
+      langfuse-postgres: { condition: service_healthy }
+      langfuse-clickhouse: { condition: service_healthy }
+      langfuse-redis: { condition: service_healthy }
+      langfuse-minio: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://${LANGFUSE_POSTGRES_USER}:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgres:5432/${LANGFUSE_POSTGRES_DB}
+      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+      REDIS_CONNECTION_STRING: redis://:${LANGFUSE_REDIS_PASSWORD}@langfuse-redis:6379
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_MINIO_ROOT_USER}
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${LANGFUSE_MINIO_ROOT_PASSWORD}
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: "false"
+    ports:
+      - "${LANGFUSE_HOST_PORT}:3000"
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/public/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  langfuse-worker:
+    image: langfuse/langfuse-worker:3  # keep in lockstep with langfuse-web's tag
+    restart: unless-stopped
+    depends_on:
+      langfuse-postgres: { condition: service_healthy }
+      langfuse-clickhouse: { condition: service_healthy }
+      langfuse-redis: { condition: service_healthy }
+      langfuse-minio: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://${LANGFUSE_POSTGRES_USER}:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgres:5432/${LANGFUSE_POSTGRES_DB}
+      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+      REDIS_CONNECTION_STRING: redis://:${LANGFUSE_REDIS_PASSWORD}@langfuse-redis:6379
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_MINIO_ROOT_USER}
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${LANGFUSE_MINIO_ROOT_PASSWORD}
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: "false"
+    networks: [llm-net]
