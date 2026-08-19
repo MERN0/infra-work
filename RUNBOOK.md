@@ -59,6 +59,32 @@ nothing to migrate for that piece), remove `external: true` and the matching
 env var blank — an unset external volume name will make `docker compose up`
 fail fast rather than silently doing the wrong thing, which is intentional.
 
+### 2a. Match image versions to what's already on disk (critical for Postgres/ClickHouse/Langfuse)
+
+`docker-compose.yml` defaults every image to the current actual-latest release.
+Postgres and ClickHouse data directories are version-format-specific, and
+Langfuse v4 has real breaking changes vs v2/v3 — attaching a newer major
+version straight to old data can fail to start or silently skip a required
+migration. Before step 4, check what's actually running on the old stack:
+
+```bash
+docker inspect <old-litellm-db-container>       --format '{{.Config.Image}}'
+docker inspect <old-langfuse-postgres-container> --format '{{.Config.Image}}'
+docker inspect <old-langfuse-clickhouse-container> --format '{{.Config.Image}}'
+docker inspect <old-langfuse-web-container>      --format '{{.Config.Image}}'
+```
+
+Set `LITELLM_POSTGRES_IMAGE_TAG`, `LANGFUSE_POSTGRES_IMAGE_TAG`,
+`CLICKHOUSE_IMAGE_TAG`, and `LANGFUSE_IMAGE_TAG` in `.env` to those **same
+versions** for this cutover — do not let the migration also be a version
+upgrade. Once the new stack is verified working on matched versions, upgrade
+each piece deliberately and separately (Postgres: `pg_upgrade`; Langfuse:
+follow `langfuse.com/self-hosting/upgrade` for the specific version jump).
+`LITELLM_IMAGE_TAG`, `REDIS_IMAGE_TAG`, and `MINIO_IMAGE_TAG` are safe to take
+at latest-default even during migration — LiteLLM itself is stateless, Redis
+here is a fresh non-migrated cache volume, and MinIO's Docker Hub image is
+frozen at a single tag regardless (see `.env.example`).
+
 ## 3. Stop the old stack — without deleting volumes
 
 ```bash

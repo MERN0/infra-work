@@ -1,4 +1,4 @@
-# LiteLLM + Langfuse (self-hosted v3) + guardrails, wired together.
+# LiteLLM + Langfuse (self-hosted) + guardrails, wired together.
 # gpt-oss-130b on vLLM stays on its own remote host — reached via
 # VLLM_API_BASE/VLLM_API_KEY as a model entry in litellm/config.yaml.
 #
@@ -7,6 +7,18 @@
 # those in with your EXISTING volume names (see scripts/00_backup_existing_stack.sh)
 # before running `docker compose up` for the first time here, so this stack
 # attaches to your current data instead of starting empty. See RUNBOOK.md.
+#
+# IMAGE VERSIONS: every image tag below is a ${VAR:-default} in .env, defaulting
+# to the actual-latest stable release as of 2026-08-19 (see .env.example for the
+# full list + sources). The two Postgres services and ClickHouse hold on-disk
+# data in a version-specific format — if you are attaching to EXISTING volumes,
+# override those *_IMAGE_TAG vars in .env to match whatever major version your
+# current deployment is already running (check with
+# `docker inspect <container> --format '{{.Config.Image}}'` on the old stack)
+# BEFORE first `docker compose up` here. Do not let a major-version jump happen
+# as a side effect of adopting this compose file — upgrade deliberately and
+# separately afterward, following each project's own upgrade guide (Postgres:
+# pg_upgrade; Langfuse: langfuse.com/self-hosting/upgrade).
 #
 # Everything is internal-only: only LiteLLM's and Langfuse's UI/API ports are
 # bound, and only to 127.0.0.1 — reach them via an SSH tunnel or VPN, never
@@ -38,7 +50,7 @@ volumes:
 services:
   # ---------------------------------------------------------------- LiteLLM
   litellm-db:
-    image: postgres:16-alpine
+    image: postgres:${LITELLM_POSTGRES_IMAGE_TAG:-18.6-alpine}
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${LITELLM_DB_USER}
@@ -54,7 +66,8 @@ services:
       retries: 10
 
   litellm:
-    image: ghcr.io/berriai/litellm:v1.55.8  # pin explicitly; check for newer stable tags before first deploy
+    # Docker Hub, not ghcr.io — same project, avoids needing GHCR/GitHub Packages access.
+    image: litellm/litellm:${LITELLM_IMAGE_TAG:-v1.97.0}
     restart: unless-stopped
     depends_on:
       litellm-db:
@@ -93,7 +106,7 @@ services:
 
   # --------------------------------------------------------------- Langfuse
   langfuse-postgres:
-    image: postgres:16-alpine
+    image: postgres:${LANGFUSE_POSTGRES_IMAGE_TAG:-18.6-alpine}
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${LANGFUSE_POSTGRES_USER}
@@ -109,7 +122,7 @@ services:
       retries: 10
 
   langfuse-clickhouse:
-    image: clickhouse/clickhouse-server:24.3-alpine
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_IMAGE_TAG:-26.6.3-alpine}
     restart: unless-stopped
     environment:
       CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
@@ -125,7 +138,7 @@ services:
       retries: 10
 
   langfuse-redis:
-    image: redis:7-alpine
+    image: redis:${REDIS_IMAGE_TAG:-8.0.1-alpine}
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "${LANGFUSE_REDIS_PASSWORD}"]
     volumes:
@@ -138,7 +151,11 @@ services:
       retries: 10
 
   langfuse-minio:
-    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    # MinIO froze its Docker Hub image after Oct 2025 (moved to source-only
+    # distribution) — this is the last tag that was ever published there, not
+    # a stale pin. It will not receive further security fixes. If you can reach
+    # cgr.dev, the actively-maintained alternative is cgr.dev/chainguard/minio:latest.
+    image: minio/minio:${MINIO_IMAGE_TAG:-RELEASE.2025-09-07T16-13-09Z}
     restart: unless-stopped
     command: ["server", "/data"]
     environment:
@@ -154,7 +171,10 @@ services:
       retries: 10
 
   langfuse-web:
-    image: langfuse/langfuse:3  # pin an exact patch tag before first deploy
+    # v4 is latest; if migrating existing v2/v3 data, pin this to your current
+    # major first (LANGFUSE_IMAGE_TAG=3 etc.) and upgrade later via
+    # langfuse.com/self-hosting/upgrade — v3->v4 has real breaking changes.
+    image: langfuse/langfuse:${LANGFUSE_IMAGE_TAG:-4.14.0}
     restart: unless-stopped
     depends_on:
       langfuse-postgres: { condition: service_healthy }
@@ -188,7 +208,7 @@ services:
       retries: 10
 
   langfuse-worker:
-    image: langfuse/langfuse-worker:3  # keep in lockstep with langfuse-web's tag
+    image: langfuse/langfuse-worker:${LANGFUSE_IMAGE_TAG:-4.14.0}  # must match langfuse-web's tag exactly
     restart: unless-stopped
     depends_on:
       langfuse-postgres: { condition: service_healthy }
