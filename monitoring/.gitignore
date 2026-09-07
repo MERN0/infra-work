@@ -1,0 +1,24 @@
+# Environment variables (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Docker volume data (local, not version controlled)
+prometheus_data/
+grafana_data/
+
+# Local backup files
+*.tar.gz
+*.backup
+*.bak
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
