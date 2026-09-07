@@ -46,6 +46,9 @@ volumes:
   # Redis backs Langfuse's queue/cache only — not a source of historical
   # truth (that's postgres+clickhouse), so it's fine as a fresh local volume.
   langfuse_redis_data:
+  # Prometheus and Grafana data volumes for vLLM monitoring
+  prometheus_data:
+  grafana_data:
 
 services:
   # ---------------------------------------------------------------- LiteLLM
@@ -231,3 +234,48 @@ services:
       ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
       TELEMETRY_ENABLED: "false"
     networks: [llm-net]
+
+  # ------------------------------------------------- Prometheus + Grafana (vLLM monitoring)
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_IMAGE_TAG:-v3.2.0}
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_HOST_PORT:-127.0.0.1:9090}:9090"
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_IMAGE_TAG:-11.6.0}
+    restart: unless-stopped
+    depends_on:
+      prometheus: { condition: service_healthy }
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_INSTALL_PLUGINS: ""
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_HOST_PORT:-127.0.0.1:3000}:3000"
+    networks: [llm-net]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
