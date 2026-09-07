@@ -12,14 +12,21 @@ global:
 #         - targets:
 #             - alertmanager:9093
 
+# NOTE on topology: this reflects the ACTUAL deployment as verified via
+# `docker ps` + curl on both hosts (2026-09-07), not an assumed layout.
+# llm1 = 10.75.9.21 (single full GPU), llm2 = 10.75.9.22 (MIG, 2x 29.48gb
+# partitions). vLLM's own metrics use a COLON prefix (`vllm:...`), not an
+# underscore — confirmed via `curl .../metrics | grep '^vllm:'` on both
+# hosts. Grafana dashboard queries must match that naming.
+
 scrape_configs:
   # Prometheus self-monitoring
   - job_name: prometheus
     static_configs:
       - targets: [localhost:9090]
 
-  # vLLM Server 1 (llm1) — base model inference metrics
-  - job_name: vllm-llm1
+  # ============================== llm1 (10.75.9.21) — full GPU, no MIG ==============================
+  - job_name: vllm-llm1-gpt120b
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /metrics
@@ -27,48 +34,22 @@ scrape_configs:
       - targets: [10.75.9.21:8000]
         labels:
           server: llm1
+          model: gpt-oss-120b
           instance_type: full_gpu
-    relabel_configs:
-      # Add custom labels for filtering/grouping in Grafana
-      - source_labels: [__address__]
-        target_label: instance
-      - source_labels: [job]
-        target_label: job_name
 
-  # vLLM Server 2 (llm2) — MIG-enabled, split into 2 instances
-  # After MIG is enabled, each partition gets its own metrics endpoint.
-  # vLLM typically exposes metrics on port 8000 for the main instance.
-  # If you've configured multiple MIG instances with separate vLLM processes,
-  # add scrape jobs for each (8000, 8001, etc.) or adjust based on your setup.
-  - job_name: vllm-llm2-main
+  - job_name: vllm-llm1-qwen3-embedding
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /metrics
     static_configs:
-      - targets: [10.75.9.22:8000]
+      - targets: [10.75.9.21:8001]
         labels:
-          server: llm2
-          instance_type: mig_instance
-          mig_partition: "0"
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
+          server: llm1
+          model: qwen3-embedding
+          instance_type: full_gpu
 
-  # If llm2 has a second vLLM instance on a different port, add it here
-  # Uncomment and adjust port/partition number as needed
-  # - job_name: vllm-llm2-mig1
-  #   scrape_interval: 15s
-  #   scrape_timeout: 10s
-  #   metrics_path: /metrics
-  #   static_configs:
-  #     - targets: [10.75.9.22:8001]
-  #       labels:
-  #         server: llm2
-  #         instance_type: mig_instance
-  #         mig_partition: "1"
-
-  # NVIDIA DCGM Exporter (GPU/MIG metrics) on llm1
-  # This requires nvidia-dcgm-exporter running on llm1 — see setup docs
+  # dcgm-exporter on llm1 runs with --network host, so it's reachable
+  # directly on the host's port 9400 (no docker port mapping shown).
   - job_name: nvidia-dcgm-llm1
     scrape_interval: 30s
     scrape_timeout: 10s
@@ -78,12 +59,55 @@ scrape_configs:
         labels:
           server: llm1
           exporter: nvidia-dcgm
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
 
-  # NVIDIA DCGM Exporter (GPU/MIG metrics) on llm2
-  # After MIG is enabled, DCGM will expose MIG-specific metrics in addition to GPU metrics
+  # ============================== llm2 (10.75.9.22) — MIG, 2x partitions ==============================
+  - job_name: vllm-llm2-gemma3-27b
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: [10.75.9.22:8000]
+        labels:
+          server: llm2
+          model: gemma-3-27b-it
+          instance_type: mig_instance
+
+  - job_name: vllm-llm2-bge-m3
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: [10.75.9.22:8001]
+        labels:
+          server: llm2
+          model: bge-m3
+          instance_type: mig_instance
+
+  - job_name: vllm-llm2-bge-reranker
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: [10.75.9.22:8002]
+        labels:
+          server: llm2
+          model: bge-reranker
+          instance_type: mig_instance
+
+  - job_name: vllm-llm2-nemotron-nano-mig
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: [10.75.9.22:8005]
+        labels:
+          server: llm2
+          model: nemotron-nano-12b-v2
+          instance_type: mig_instance
+
+  # dcgm-exporter on llm2 also runs with --network host (port 9400).
+  # Exposes MIG-specific series with GPU_I_ID / GPU_I_PROFILE labels
+  # (confirmed: GPU_I_PROFILE="29.48gb", GPU_I_ID="1" and "2").
   - job_name: nvidia-dcgm-llm2
     scrape_interval: 30s
     scrape_timeout: 10s
@@ -93,12 +117,15 @@ scrape_configs:
         labels:
           server: llm2
           exporter: nvidia-dcgm
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
 
-  # Optional: Node Exporter for system metrics (CPU, memory, disk) on llm1
-  # Requires node-exporter running on llm1
+  # ============================== Excluded from this stack ==============================
+  # mahendari-safety-security-dev (llm2:11434) is an Ollama-based service, not vLLM —
+  # different metrics format (Ollama has no native /metrics endpoint as far as we've
+  # verified). Add a scrape job here only after confirming it actually exports
+  # Prometheus-format metrics; don't assume.
+
+  # Optional: Node Exporter for system metrics (CPU, memory, disk) — not yet deployed
+  # on either host. Uncomment and adjust if you add node-exporter later.
   # - job_name: node-llm1
   #   scrape_interval: 15s
   #   static_configs:
@@ -106,8 +133,6 @@ scrape_configs:
   #       labels:
   #         server: llm1
   #         exporter: node
-
-  # Optional: Node Exporter for system metrics on llm2
   # - job_name: node-llm2
   #   scrape_interval: 15s
   #   static_configs:
