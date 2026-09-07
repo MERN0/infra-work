@@ -30,13 +30,19 @@ From your local machine, set up SSH tunnels:
 # Terminal 1: Prometheus tunnel
 ssh -L 9090:127.0.0.1:9090 user@<monitoring-host>
 
-# Terminal 2: Grafana tunnel
-ssh -L 3000:127.0.0.1:3000 user@<monitoring-host>
+# Terminal 2: Grafana tunnel (default host port 3002 — see note below)
+ssh -L 3002:127.0.0.1:3002 user@<monitoring-host>
 ```
 
 Then open in browser:
 - **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (login: admin / password-from-.env)
+- **Grafana**: http://localhost:3002 (login: admin / password-from-.env)
+
+> **Port note:** Grafana defaults to host port **3002**, not 3000, because the
+> main infra-work stack's Langfuse service already binds `127.0.0.1:3000` on
+> many hosts. If Langfuse isn't running here, you can set `GRAFANA_HOST_PORT`
+> back to `127.0.0.1:3000` in `.env`. Either way, check first:
+> `ss -tlnp | grep <port>` (or `netstat -tlnp | grep <port>`).
 
 ### 4. Configure vLLM Servers
 
@@ -72,7 +78,7 @@ monitoring/
 | `GRAFANA_IMAGE_TAG` | 11.6.0 | Grafana Docker image version |
 | `GRAFANA_ADMIN_USER` | admin | Grafana admin username |
 | `GRAFANA_ADMIN_PASSWORD` | admin | Grafana admin password (**CHANGE THIS**) |
-| `GRAFANA_HOST_PORT` | 127.0.0.1:3000 | Grafana port (internal-only) |
+| `GRAFANA_HOST_PORT` | 127.0.0.1:3002 | Grafana port (internal-only; avoids clashing with Langfuse on 3000) |
 
 ### Prometheus Configuration
 
