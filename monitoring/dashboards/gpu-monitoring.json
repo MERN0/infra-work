@@ -188,7 +188,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
       "id": 5,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
@@ -198,39 +198,8 @@
       "targets": [
         { "expr": "DCGM_FI_DEV_GPU_TEMP", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
       ],
+      "description": "Memory-die temperature (DCGM_FI_DEV_MEMORY_TEMP) is deliberately NOT charted: nvidia-smi reports it as N/A on this hardware, so DCGM returns a placeholder 0 rather than a real reading.",
       "title": "GPU Temperature",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisLabel": "°C", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 10, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
-          },
-          "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
-      "id": 6,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        { "expr": "DCGM_FI_DEV_MEMORY_TEMP", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
-      ],
-      "title": "Memory Temperature",
       "type": "timeseries"
     },
 
@@ -278,7 +247,8 @@
           "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
         }
       ],
-      "title": "GPU Memory Usage (%) — best utilization proxy for MIG slices on llm2",
+      "description": "NOTE: this is allocation, not load. vLLM pre-allocates its KV cache at startup (your containers run --gpu-memory-utilization 0.8-0.95), so this line sits nearly flat regardless of how busy the GPU is. Useful for capacity/OOM headroom, NOT as a utilization signal. For actual load on llm2, see the Power Draw and SM Clock panels below.",
+      "title": "GPU Memory Allocated (%) — capacity, not load (see panel description)",
       "type": "timeseries"
     },
     {
@@ -316,7 +286,8 @@
           "legendFormat": "{{server}} gpu{{gpu}}"
         }
       ],
-      "title": "Compute Utilization (%) — llm1 only (not exposed per-MIG-instance on llm2, see chat)",
+      "description": "llm1 only. DCGM_FI_DEV_GPU_UTIL is not emitted on llm2 because that GPU is in MIG mode — verified: both hosts ship an identical default-counters.csv listing this field, but only the non-MIG host reports values, so the driver is withholding it, not the exporter config. For llm2 load, use Power Draw and SM Clock.",
+      "title": "Compute Utilization (%) — llm1 only (MIG blocks this metric on llm2)",
       "type": "timeseries"
     },
 
@@ -358,7 +329,8 @@
       "targets": [
         { "expr": "DCGM_FI_DEV_POWER_USAGE", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
       ],
-      "title": "Power Usage",
+      "description": "PRIMARY LOAD INDICATOR FOR llm2. Since MIG blocks DCGM_FI_DEV_GPU_UTIL, power draw is the most direct available signal of real GPU work: an idle card sits near its floor, a busy one climbs toward its cap. Note this is per PHYSICAL GPU, so on llm2 it reflects both MIG partitions combined, not each slice separately.",
+      "title": "Power Draw — primary load indicator for llm2",
       "type": "timeseries"
     },
     {
@@ -391,7 +363,8 @@
         { "expr": "DCGM_FI_DEV_SM_CLOCK", "refId": "A", "legendFormat": "SM clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}" },
         { "expr": "DCGM_FI_DEV_MEM_CLOCK", "refId": "B", "legendFormat": "Mem clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}" }
       ],
-      "title": "Clock Speeds (SM / Memory)",
+      "description": "SECONDARY LOAD INDICATOR FOR llm2. SM clock boosts under compute load and drops back toward idle when the GPU is quiet, so its shape tracks activity even though MIG hides DCGM_FI_DEV_GPU_UTIL. Read it alongside Power Draw.",
+      "title": "Clock Speeds (SM / Memory) — secondary load indicator for llm2",
       "type": "timeseries"
     },
 
