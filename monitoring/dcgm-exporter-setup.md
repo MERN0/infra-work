@@ -1,5 +1,51 @@
 # DCGM Exporter: enabling GPU utilization metrics (incl. under MIG)
 
+## Status: root cause found, fix deliberately NOT applied (2026-09-07)
+
+Investigated on llm2 down to the actual blocker:
+
+```
+cat /proc/driver/nvidia/params | grep RmProfilingAdminOnly
+RmProfilingAdminOnly: 1
+```
+
+This is a **kernel-module-load-time** parameter that restricts DCGM's profiling API
+(`DCGM_FI_PROF_*`, including `GR_ENGINE_ACTIVE`) to admin-only access, enforced by the
+NVIDIA driver itself — `--cap-add SYS_ADMIN` on the container was not sufficient, because
+the restriction lives below the container capability layer. `dcgmi modules --list` could
+not even be queried at the time (host-engine connection error), so this was confirmed via
+the raw params file rather than DCGM's own tooling.
+
+Fixing it requires `options nvidia RmProfilingAdminOnly=0` in a modprobe config, then a
+kernel module reload or full reboot — which means **stopping every process holding the
+GPU first**. On llm2 that's all 4 live vLLM containers (`gemma-3-27b`, `bge-m3`,
+`bge-reranker`, the nemotron model) plus `dcgm-exporter`.
+
+**Decision: not pursuing this now.** The downtime cost on a host serving 4 live models
+wasn't worth true device-level utilization, given a workable alternative exists (below).
+If this gets revisited later — e.g. during an already-planned maintenance window — the
+fix is exactly the "Procedure" steps below, this time following through to step 3.
+
+The `dcgm-exporter` container was rolled back to its original config (no `SYS_ADMIN`, no
+merged PROF counters file) since that capability serves no purpose while the driver still
+blocks it — no reason to carry the extra privilege for nothing.
+
+### What we use instead
+
+Two vLLM metrics, already scraped per model/partition in `prometheus.yml`, give genuine
+per-MIG-partition load visibility that DCGM cannot — DCGM only reports at the physical-GPU
+level, but each MIG partition runs its own vLLM process with its own counters:
+
+- `vllm:num_requests_running` — active request count per model
+- `vllm:kv_cache_usage_perc` — KV cache saturation per model (0–1 ratio; ×100 for %)
+
+Both are on the dashboard's "Per-Model Load (vLLM)" row. `DCGM_FI_DEV_POWER_USAGE` and
+`DCGM_FI_DEV_SM_CLOCK` remain as physical-GPU-level (both-partitions-combined) fallback
+signals.
+
+---
+
+
 This is run **on the GPU hosts** (llm1 `10.75.9.21`, llm2 `10.75.9.22`), not on the
 monitoring host. Prometheus scrapes port `9400` on each.
 

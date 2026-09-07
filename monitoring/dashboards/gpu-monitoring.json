@@ -362,87 +362,18 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "%",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent",
-          "max": 100,
-          "min": 0
-        },
-        "overrides": []
-      },
+      "collapse": false,
+      "datasource": null,
       "gridPos": {
-        "h": 9,
+        "h": 1,
         "w": 24,
         "x": 0,
         "y": 15
       },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        {
-          "expr": "DCGM_FI_PROF_GR_ENGINE_ACTIVE * 100",
-          "refId": "A",
-          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
-        }
-      ],
-      "description": "THE utilization metric. DCGM_FI_PROF_GR_ENGINE_ACTIVE is the ratio of time the graphics/compute engine was active, exported 0-1, so it is multiplied by 100 here. Unlike DCGM_FI_DEV_GPU_UTIL this is a profiling-API field, which is why it survives MIG mode. Requires the exporter to run with --cap-add SYS_ADMIN and a counters file that includes DCGM_FI_PROF_* fields; if this panel is empty, that exporter change has not been applied on that host yet. Whether it resolves per MIG partition (GPU_I_ID=1/2) or only per physical GPU depends on driver support - check the legend.",
-      "title": "GPU Compute Utilization (%) — works on MIG",
-      "type": "timeseries"
+      "id": 105,
+      "panels": [],
+      "title": "Per-Model Load (vLLM) — the real per-MIG-partition signal on llm2",
+      "type": "row"
     },
     {
       "datasource": "Prometheus",
@@ -452,7 +383,7 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "%",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -489,9 +420,7 @@
               }
             ]
           },
-          "unit": "percent",
-          "max": 100,
-          "min": 0
+          "unit": "short"
         },
         "overrides": []
       },
@@ -499,9 +428,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 16
       },
-      "id": 14,
+      "id": 16,
       "options": {
         "legend": {
           "calcs": [
@@ -518,13 +447,13 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "DCGM_FI_PROF_PIPE_TENSOR_ACTIVE * 100",
+          "expr": "vllm:num_requests_running",
           "refId": "A",
-          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+          "legendFormat": "{{server}} - {{model}}"
         }
       ],
-      "description": "Ratio of cycles the tensor (HMMA) pipe was active, x100. For LLM inference this is the sharpest signal of real model compute - it rises during prefill/decode and sits near zero when idle, whereas GR_ENGINE_ACTIVE can be non-zero for lighter work. Same SYS_ADMIN/profiling prerequisite as the panel above.",
-      "title": "Tensor Core Activity (%)",
+      "description": "Requests each model is actively processing right now. Because each MIG partition on llm2 runs its own vLLM process, this genuinely resolves per-partition load - something DCGM cannot do on this GPU (see Power Draw panel description). A model sitting at 0 while others are non-zero means that partition is idle.",
+      "title": "Active Requests Running, per Model",
       "type": "timeseries"
     },
     {
@@ -582,9 +511,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 16
       },
-      "id": 15,
+      "id": 17,
       "options": {
         "legend": {
           "calcs": [
@@ -601,13 +530,13 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "DCGM_FI_PROF_DRAM_ACTIVE * 100",
+          "expr": "vllm:kv_cache_usage_perc * 100",
           "refId": "A",
-          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+          "legendFormat": "{{server}} - {{model}}"
         }
       ],
-      "description": "Ratio of cycles the device memory interface was sending or receiving, x100. LLM decode is typically memory-bandwidth bound rather than compute bound, so a high value here alongside modest tensor activity is the expected signature of token generation. Same SYS_ADMIN/profiling prerequisite.",
-      "title": "Memory Bandwidth Activity (%)",
+      "description": "How full each model's KV cache is - a saturation signal, distinct from request count (a model can have few requests but a nearly-full cache from long contexts). vLLM exports this as a 0-1 ratio (confirmed from a live sample: 0.174 for one model), hence the *100 here. Per-model/per-partition, same reasoning as above.",
+      "title": "KV Cache Usage (%), per Model",
       "type": "timeseries"
     },
     {
@@ -665,7 +594,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 24
       },
       "id": 7,
       "options": {
@@ -748,7 +677,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 24
       },
       "id": 8,
       "options": {
@@ -783,7 +712,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 32
       },
       "id": 103,
       "panels": [],
@@ -843,7 +772,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 33
       },
       "id": 9,
       "options": {
@@ -867,8 +796,8 @@
           "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
         }
       ],
-      "description": "Per PHYSICAL GPU, so on llm2 this covers both MIG partitions combined. Was the best available load signal before profiling metrics; now mainly useful for thermal/power budgeting, and as a fallback load indicator on any host where DCGM_FI_PROF_* is not enabled.",
-      "title": "Power Draw",
+      "description": "Per PHYSICAL GPU, so on llm2 this covers both MIG partitions combined, not each slice separately. This is the primary load signal for llm2: true compute-utilization metrics (DCGM_FI_PROF_*) require RmProfilingAdminOnly=0 in the NVIDIA driver, which needs a kernel module reload / reboot - deliberately not done here since llm2 serves 4 live models. See dcgm-exporter-setup.md for the full investigation and how to revisit this decision later.",
+      "title": "Power Draw — load indicator for llm2 (DCGM profiling metrics unavailable, see dcgm-exporter-setup.md)",
       "type": "timeseries"
     },
     {
@@ -924,7 +853,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 33
       },
       "id": 10,
       "options": {
@@ -952,8 +881,8 @@
           "legendFormat": "Mem clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}"
         }
       ],
-      "description": "SM clock boosts under load and falls back at idle, so its shape tracks activity. A fallback load indicator for hosts without profiling metrics enabled; prefer the GPU Compute Utilization panel where it has data.",
-      "title": "Clock Speeds (SM / Memory)",
+      "description": "SM clock boosts under load and falls back at idle. Same caveat as Power Draw: per physical GPU, not per MIG partition. For per-partition load, see the Per-Model Load (vLLM) panels below - each MIG partition runs its own vLLM process, so those metrics DO resolve per partition where DCGM cannot.",
+      "title": "Clock Speeds (SM / Memory) — load indicator for llm2",
       "type": "timeseries"
     },
     {
@@ -963,7 +892,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 41
       },
       "id": 104,
       "panels": [],
@@ -1027,7 +956,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 42
       },
       "id": 11,
       "options": {
@@ -1106,7 +1035,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 50
+        "y": 42
       },
       "id": 12,
       "options": {
