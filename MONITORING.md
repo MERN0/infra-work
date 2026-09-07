@@ -34,6 +34,23 @@ ssh -L 3000:127.0.0.1:3000 user@10.1.2.186
 # Default credentials: admin / your-password-from-.env
 ```
 
+## Directory Structure
+
+All monitoring configuration is organized under the `monitoring/` directory to keep it separate from other infrastructure:
+
+```
+monitoring/
+├── prometheus/
+│   └── prometheus.yml              # Prometheus scrape configuration
+├── dashboards/
+│   ├── vllm-monitoring.json        # Grafana dashboard (8 panels)
+│   └── dashboard-provider.yml      # Grafana dashboard provisioning
+└── datasources/
+    └── prometheus.yml              # Grafana datasource configuration
+```
+
+This structure keeps Prometheus and Grafana configuration organized and separate from the rest of the infrastructure.
+
 ### 2. On vLLM Servers (llm1 and llm2)
 
 #### Enable vLLM Metrics Export

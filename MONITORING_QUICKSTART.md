@@ -191,6 +191,21 @@ curl -s http://localhost:9400/metrics | grep mig | head -3
 # Should show mig_profile, mig_uuid, etc.
 ```
 
+## Directory Structure
+
+All monitoring configuration is organized under the `monitoring/` directory:
+
+```
+monitoring/
+├── prometheus/
+│   └── prometheus.yml          # Prometheus scrape configuration
+├── dashboards/
+│   ├── vllm-monitoring.json    # Grafana dashboard
+│   └── dashboard-provider.yml  # Dashboard provisioning config
+└── datasources/
+    └── prometheus.yml          # Grafana datasource config
+```
+
 ## Phase 4: Verify Data is Flowing (5 minutes)
 
 ### 4.1 Run the health check script:
