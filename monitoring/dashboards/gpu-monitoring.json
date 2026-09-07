@@ -21,7 +21,12 @@
     {
       "collapse": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 100,
       "panels": [],
       "title": "Summary",
@@ -32,25 +37,47 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
       "id": 1,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "text": {},
         "textMode": "auto"
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "count(count by (server, gpu) (DCGM_FI_DEV_GPU_TEMP))", "refId": "A" }
+        {
+          "expr": "count(count by (server, gpu) (DCGM_FI_DEV_GPU_TEMP))",
+          "refId": "A"
+        }
       ],
       "title": "Physical GPUs Monitored",
       "type": "stat"
@@ -63,29 +90,52 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 75 },
-              { "color": "red", "value": 85 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
             ]
           },
           "unit": "celsius"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
       "id": 2,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["max"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
         "text": {},
         "textMode": "auto"
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "max(DCGM_FI_DEV_GPU_TEMP)", "refId": "A" }
+        {
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP)",
+          "refId": "A"
+        }
       ],
       "title": "Hottest GPU (Current)",
       "type": "stat"
@@ -95,25 +145,47 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "watt"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "text": {},
         "textMode": "auto"
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "sum(DCGM_FI_DEV_POWER_USAGE)", "refId": "A" }
+        {
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE)",
+          "refId": "A"
+        }
       ],
       "title": "Total Power Draw (All GPUs)",
       "type": "stat"
@@ -126,37 +198,61 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
       "id": 4,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "text": {},
         "textMode": "auto"
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "sum(increase(DCGM_FI_DEV_XID_ERRORS[1h]))", "refId": "A" }
+        {
+          "expr": "sum(increase(DCGM_FI_DEV_XID_ERRORS[1h]))",
+          "refId": "A"
+        }
       ],
       "title": "XID Errors (Last 1h)",
       "type": "stat"
     },
-
     {
       "collapse": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "id": 101,
       "panels": [],
       "title": "Temperature",
@@ -166,47 +262,100 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "°C", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 10, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "°C",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 75 },
-              { "color": "red", "value": 85 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
             ]
           },
           "unit": "celsius"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
       "id": 5,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "DCGM_FI_DEV_GPU_TEMP", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
+        {
+          "expr": "DCGM_FI_DEV_GPU_TEMP",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
       ],
       "description": "Memory-die temperature (DCGM_FI_DEV_MEMORY_TEMP) is deliberately NOT charted: nvidia-smi reports it as N/A on this hardware, so DCGM returns a placeholder 0 rather than a real reading.",
       "title": "GPU Temperature",
       "type": "timeseries"
     },
-
     {
       "collapse": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
       "id": 102,
       "panels": [],
       "title": "Memory & Utilization",
@@ -216,28 +365,321 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "%", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 15, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "DCGM_FI_PROF_GR_ENGINE_ACTIVE * 100",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
+      ],
+      "description": "THE utilization metric. DCGM_FI_PROF_GR_ENGINE_ACTIVE is the ratio of time the graphics/compute engine was active, exported 0-1, so it is multiplied by 100 here. Unlike DCGM_FI_DEV_GPU_UTIL this is a profiling-API field, which is why it survives MIG mode. Requires the exporter to run with --cap-add SYS_ADMIN and a counters file that includes DCGM_FI_PROF_* fields; if this panel is empty, that exporter change has not been applied on that host yet. Whether it resolves per MIG partition (GPU_I_ID=1/2) or only per physical GPU depends on driver support - check the legend.",
+      "title": "GPU Compute Utilization (%) — works on MIG",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "DCGM_FI_PROF_PIPE_TENSOR_ACTIVE * 100",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
+      ],
+      "description": "Ratio of cycles the tensor (HMMA) pipe was active, x100. For LLM inference this is the sharpest signal of real model compute - it rises during prefill/decode and sits near zero when idle, whereas GR_ENGINE_ACTIVE can be non-zero for lighter work. Same SYS_ADMIN/profiling prerequisite as the panel above.",
+      "title": "Tensor Core Activity (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "DCGM_FI_PROF_DRAM_ACTIVE * 100",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
+      ],
+      "description": "Ratio of cycles the device memory interface was sending or receiving, x100. LLM decode is typically memory-bandwidth bound rather than compute bound, so a high value here alongside modest tensor activity is the expected signature of token generation. Same SYS_ADMIN/profiling prerequisite.",
+      "title": "Memory Bandwidth Activity (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
       "id": 7,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
@@ -255,28 +697,72 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "%", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 15, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
       "id": 8,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
@@ -290,11 +776,15 @@
       "title": "Compute Utilization (%) — llm1 only (MIG blocks this metric on llm2)",
       "type": "timeseries"
     },
-
     {
       "collapse": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
       "id": 103,
       "panels": [],
       "title": "Power & Clocks",
@@ -304,74 +794,177 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "W", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 10, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "W",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "watt"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
       "id": 9,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "DCGM_FI_DEV_POWER_USAGE", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
+        {
+          "expr": "DCGM_FI_DEV_POWER_USAGE",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
       ],
-      "description": "PRIMARY LOAD INDICATOR FOR llm2. Since MIG blocks DCGM_FI_DEV_GPU_UTIL, power draw is the most direct available signal of real GPU work: an idle card sits near its floor, a busy one climbs toward its cap. Note this is per PHYSICAL GPU, so on llm2 it reflects both MIG partitions combined, not each slice separately.",
-      "title": "Power Draw — primary load indicator for llm2",
+      "description": "Per PHYSICAL GPU, so on llm2 this covers both MIG partitions combined. Was the best available load signal before profiling metrics; now mainly useful for thermal/power budgeting, and as a fallback load indicator on any host where DCGM_FI_PROF_* is not enabled.",
+      "title": "Power Draw",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "MHz", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 0, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "MHz",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
       "id": 10,
       "options": {
-        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "DCGM_FI_DEV_SM_CLOCK", "refId": "A", "legendFormat": "SM clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}" },
-        { "expr": "DCGM_FI_DEV_MEM_CLOCK", "refId": "B", "legendFormat": "Mem clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}" }
+        {
+          "expr": "DCGM_FI_DEV_SM_CLOCK",
+          "refId": "A",
+          "legendFormat": "SM clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        },
+        {
+          "expr": "DCGM_FI_DEV_MEM_CLOCK",
+          "refId": "B",
+          "legendFormat": "Mem clock - {{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
       ],
-      "description": "SECONDARY LOAD INDICATOR FOR llm2. SM clock boosts under compute load and drops back toward idle when the GPU is quiet, so its shape tracks activity even though MIG hides DCGM_FI_DEV_GPU_UTIL. Read it alongside Power Draw.",
-      "title": "Clock Speeds (SM / Memory) — secondary load indicator for llm2",
+      "description": "SM clock boosts under load and falls back at idle, so its shape tracks activity. A fallback load indicator for hosts without profiling metrics enabled; prefer the GPU Compute Utilization panel where it has data.",
+      "title": "Clock Speeds (SM / Memory)",
       "type": "timeseries"
     },
-
     {
       "collapse": false,
       "datasource": null,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
       "id": 104,
       "panels": [],
       "title": "Health / Errors",
@@ -381,36 +974,81 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "count", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "bars",
-            "fillOpacity": 40, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
       "id": 11,
       "options": {
-        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "increase(DCGM_FI_DEV_XID_ERRORS[5m])", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
+        {
+          "expr": "increase(DCGM_FI_DEV_XID_ERRORS[5m])",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
       ],
       "title": "XID Errors (should stay at 0 — GPU hardware/driver faults)",
       "type": "timeseries"
@@ -419,30 +1057,77 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "axisLabel": "count", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line",
-            "fillOpacity": 10, "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
-            "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "axisLabel": "count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 50
+      },
       "id": 12,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        { "expr": "DCGM_FI_DEV_PCIE_REPLAY_COUNTER", "refId": "A", "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}" }
+        {
+          "expr": "DCGM_FI_DEV_PCIE_REPLAY_COUNTER",
+          "refId": "A",
+          "legendFormat": "{{server}} gpu{{gpu}}{{GPU_I_ID}}"
+        }
       ],
       "title": "PCIe Replay Counter (cumulative — should stay flat)",
       "type": "timeseries"
@@ -451,11 +1136,20 @@
   "refresh": "30s",
   "schemaVersion": 27,
   "style": "dark",
-  "tags": ["gpu", "dcgm", "mig", "infra"],
+  "tags": [
+    "gpu",
+    "dcgm",
+    "mig",
+    "infra"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "definition": "label_values(DCGM_FI_DEV_GPU_TEMP, server)",
         "description": null,
         "error": null,
@@ -480,7 +1174,10 @@
       }
     ]
   },
-  "time": { "from": "now-1h", "to": "now" },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "GPU Monitoring (DCGM)",
